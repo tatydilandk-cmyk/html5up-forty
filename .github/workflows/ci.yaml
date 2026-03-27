@@ -18,34 +18,38 @@ jobs:
   # ===============================
   ci:
     runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Display variables
+        shell: pwsh
         run: |
-          echo "IMAGE_NAME: $IMAGE_NAME"
-          echo "IMAGE_TAG: $IMAGE_TAG"
-          echo "DOCKER_REGISTRY: $DOCKER_REGISTRY"
+          echo "IMAGE_NAME: $env:IMAGE_NAME"
+          echo "IMAGE_TAG: $env:IMAGE_TAG"
+          echo "DOCKER_REGISTRY: $env:DOCKER_REGISTRY"
 
       - name: Login to Docker Hub
+        shell: pwsh
         run: |
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+          docker login -u "$env:DOCKERHUB_USERNAME" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
       - name: Build Docker image
+        shell: pwsh
         run: |
-          docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+          docker build -t "$env:DOCKER_REGISTRY/$env:IMAGE_NAME`:$env:IMAGE_TAG" .
 
       - name: Verify image
+        shell: pwsh
         run: |
-          docker image ls | grep $IMAGE_NAME
+          docker image ls | Select-String $env:IMAGE_NAME
 
       - name: Push Docker image
+        shell: pwsh
         run: |
-          docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          docker push "$env:DOCKER_REGISTRY/$env:IMAGE_NAME`:$env:IMAGE_TAG"
 
   # ===============================
   # JOB 2 - SCAN TRIVY
@@ -72,25 +76,26 @@ jobs:
   deploy:
     needs: scan-trivy
     runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Pull latest image
+        shell: pwsh
         run: |
-          docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          docker pull "$env:DOCKER_REGISTRY/$env:IMAGE_NAME`:$env:IMAGE_TAG"
 
       - name: Stop existing container
+        shell: pwsh
         run: |
-          docker stop ci-app || true
+          docker stop ci-app 2>$null; true
 
       - name: Remove old container
+        shell: pwsh
         run: |
-          docker rm ci-app || true
+          docker rm ci-app 2>$null; true
 
       - name: Run new container
+        shell: pwsh
         run: |
-          docker run -d \
-            -p 80:80 \
-            --name ci-app \
-            $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          docker run -d `
+            -p 80:80 `
+            --name ci-app `
+            "$env:DOCKER_REGISTRY/$env:IMAGE_NAME`:$env:IMAGE_TAG"
