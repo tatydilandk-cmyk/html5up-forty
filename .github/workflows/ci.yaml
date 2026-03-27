@@ -17,7 +17,8 @@ jobs:
   # JOB 1 - CI : BUILD + PUSH
   # ===============================
   ci:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
 
     steps:
       - name: Checkout source code
