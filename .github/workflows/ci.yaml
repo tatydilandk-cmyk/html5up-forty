@@ -46,7 +46,7 @@ jobs:
           docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/ci-html-demo:latest
           format: table
@@ -60,7 +60,7 @@ jobs:
   # ===============================
   deploy:
     needs: ci
-    runs-on: aws-runner
+    runs-on: self-hosted
 
     steps:
       - name: Pull latest image
