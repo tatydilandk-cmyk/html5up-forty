@@ -85,12 +85,12 @@ jobs:
       - name: Stop existing container
         shell: powershell
         run: |
-          docker stop ci-app; if ($LASTEXITCODE -ne 0) { Write-Host "No container to stop" }
+          docker stop ci-app; $LASTEXITCODE = 0
 
       - name: Remove old container
         shell: powershell
         run: |
-          docker rm ci-app; if ($LASTEXITCODE -ne 0) { Write-Host "No container to remove" }
+          docker rm ci-app; $LASTEXITCODE = 0
 
       - name: Run new container
         shell: powershell
